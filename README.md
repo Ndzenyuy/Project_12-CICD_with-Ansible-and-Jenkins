@@ -4,7 +4,7 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
 
 ## Project architecture
 
-![](architecture)
+![](https://github.com/Ndzenyuy/Project_12-CICD_with-Ansible-and-Jenkins/blob/cicd-jenkans-prod/images/Continous%20Delivery%20And%20Configuration%20Management(jenkins%20plus%20Ansible).png)
 
 ## Prereqs
 
@@ -475,8 +475,8 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
         branch: */main
     ```
     Save and Build project. 
-    ![](build success)
-    ![](App deployed to stage)
+    ![]([build success](https://github.com/Ndzenyuy/Project_12-CICD_with-Ansible-and-Jenkins/blob/cicd-jenkans-prod/images/ansible-build-stage.png))
+   
 
 - App server for prod \
     Launch an Ec2 instance:
@@ -659,9 +659,11 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
         }
     ```
     Save and run pipeline on Jenkins
-    ![](pipeline prod)
-    For the parameters, we have to pass them before building, so the artifact which we require to build is selected, the prod pipeline awaits the build number and the timestamp. We set these parameters and the pipeline builds it after the QA team gives a go ahead
+    ![](https://github.com/Ndzenyuy/Project_12-CICD_with-Ansible-and-Jenkins/blob/cicd-jenkans-prod/images/ansible-build-stage.png)
+    For the parameters, we have to pass them before building, so the artifact which we require to build is selected, the prod pipeline awaits the build number and the timestamp. We set these parameters and the pipeline builds it after the QA team gives a go ahead.
+   ![](https://github.com/Ndzenyuy/Project_12-CICD_with-Ansible-and-Jenkins/blob/cicd-jenkans-prod/images/ansible-build-stage.png)
 
 - Complete CICD flow \
     The prod pipeline needs parameters to run, thus we have to remove the Git Polling webhook flag that was set in the pipeline configurations: Configure pipeline -> GitHub hook trigger for GITScm polling = false -> save
-    
+
+ 
