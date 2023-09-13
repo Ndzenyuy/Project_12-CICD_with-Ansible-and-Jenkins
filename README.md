@@ -39,7 +39,7 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
         Create record:
                 name: app01stg
                 record-type: A
-                value: private ip of app01-staging
+                value: <private ip of app01-staging>
     ```
 
     Add ssh credentials to Jenkins: manage jenkins -> credentials -> global credentials -> add credentials
@@ -308,14 +308,14 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
 
     ```
 
-    4. ansible.cfg   
+    4. ansible.cfg file
     ```
     [defaults]
     host_key_checking = False
     timeout = 30
     ```
 
-    5. prod.inventory
+    5. prod.inventory file
     ```
     [appsrvgrp]
     app01prod.vprofile.project
@@ -565,4 +565,103 @@ In this project, i deployed a pipeline integrating Ansible to Jenkins. Ansible i
 
  ```
  
-- Complete CICD flow
+- Create another record in vprofile.project hosted zone in route 53
+    ```
+        name: app01prod
+        record-type: A
+        value: <private ip of app01-prod>
+    ```
+
+-    Add ssh credentials to Jenkins: manage jenkins -> credentials -> global credentials -> add credentials
+
+    ```
+    kind: SSH username with private key
+    scope: global
+    ID: applogin-prod
+    description: applogin-prod
+    username: ubuntu
+    private key: copy and paste the contents of app-prod-key.pem(keypair used to loging to prod server)
+    -> save
+    ```
+- Jenkinsfile for prod
+    Create a new git branch from our project folder in vscode
+    ```
+    git checkout -b cicd-jenkans-prod
+    ```
+    Rename stage.inventory to prod.inventory, in the code change ```app01stg.vprofile.project``` to ```app01prd.vprofile.project```
+    In the Jenkins file,
+    ```
+        pipeline {
+            agent any
+            
+            environment {
+                NEXUSPASS = credentials('nexuspass')
+                
+            }
+
+            stages {
+                stage('Setup parameters') {
+                    steps {
+                        script{
+                            properties([
+                                parameters([
+                                    string(
+                                        defaultValue: '',
+                                        name: 'BUILD',
+                                    ),
+                                    string(
+                                        defaultValue: '',
+                                        name: 'TIME'
+                                    )
+                                ])
+                            ])
+                        }
+                    }
+                }
+                stage('Ansible Deploy to prod'){
+                    steps {
+                        ansiblePlaybook([
+                        inventory   : 'ansible/prod.inventory',
+                        playbook    : 'ansible/site.yml',
+                        installation: 'ansible',
+                        colorized   : true,
+                        credentialsId: 'applogin-prod',
+                        disableHostKeyChecking: true,
+                        extraVars   : [
+                            USER: "admin",
+                            PASS: "${NEXUSPASS}",
+                            nexusip: "172.31.25.86",
+                            reponame: "vprofile-release",
+                            groupid: "QA",
+                            time: "${env.TIME}",
+                            build: "${env.BUILD}",
+                            artifactid: "vproapp",
+                            vprofile_version: "vproapp-${env.BUILD}-${env.TIME}.war"
+                        ]
+                    ])
+                    }
+                }
+
+                        
+            
+
+                
+            }
+
+            /*post {
+                always {
+                    echo 'Slack Notifications'
+                    slackSend channel: '#jenkinscicd',
+                        colo: COLOR_MAP[currentBuild.currentResult],
+                        message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+                }
+            }*/
+        }
+    ```
+    Save and run pipeline on Jenkins
+    ![](pipeline prod)
+    For the parameters, we have to pass them before building, so the artifact which we require to build is selected, the prod pipeline awaits the build number and the timestamp. We set these parameters and the pipeline builds it after the QA team gives a go ahead
+
+- Complete CICD flow \
+    The prod pipeline needs parameters to run, thus we have to remove the Git Polling webhook flag that was set in the pipeline configurations: Configure pipeline -> GitHub hook trigger for GITScm polling = false -> save
+    
